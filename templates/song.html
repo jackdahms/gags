@@ -1,0 +1,7 @@
+{% extends "index.html" %}
+
+{% block song %}
+    {% for i in range(lines|length) %}
+        <p class="my-0">{{ i + 1 }}) {{ lines[i] }}</p>
+    {% endfor %}
+{% endblock %}

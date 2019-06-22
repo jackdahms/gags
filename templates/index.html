@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% if found %}
+        <div class="alert alert-success my-2">
+            {{ artist_data[0] }} found with ID {{ artist_data[1] }}.
+        </div>
+        <form id="generateForm" class="form pt-2" action="{{ url_for('generate') }}">
+            <input type="hidden" name="artist" value="{{ artist_data[0] }}">
+            <input type="hidden" name="artist_id" value="{{ artist_data[1] }}">
+            <div class="form-group row">
+                <div class="col">
+                    <label for="ngramInput" class="pt-1 pr-3">Size of n-grams:</label>
+                </div>
+                <div class="col">
+                    <div class="input-group">
+                        <input type="text" class="form-control rounded-left" id="ngramInput" name="ngrams" value="2" aria-describedby="generateButton" readonly>
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-primary" type="submit" id="generateButton">Generate</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    {% else %}
+        <div class="alert alert-danger my-2">
+            Couldn't find "{{ artist_data[0] }}".
+        </div>
+    {% endif %}
+    <div class="d-flex justify-content-center">
+        <div id="loadingDiv" class="spinner-border text-primary d-none my-4" role="status">
+            <span class="sr-only">Loading songs...</span>
+        </div>
+    </div>
+    {% block song %}
+    {% endblock %}
+    <script src="{{ url_for('static', filename='javascript/index.js') }}"></script>
+{% endblock %}
