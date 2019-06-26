@@ -7,6 +7,10 @@ Turn off writer's block by taking inspiration from original, unreleased songs in
 - support for n-grams
 
 ## Low priority:
+- what to do about punctuation?
+    - ignore when building chain?
+- advanced options dropdown
+- song title generation
 - put os.path.joins everywhere
 - figure out better design for load_songs
     - build_index() returns songs?
