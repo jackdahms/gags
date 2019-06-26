@@ -1,4 +1,6 @@
 __pycache__/
+gagsenv/
+
 .DS_Store
 token
 
