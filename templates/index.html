@@ -32,7 +32,9 @@
             <span class="sr-only">Loading songs...</span>
         </div>
     </div>
-    {% block song %}
-    {% endblock %}
+    <div id="songDiv">
+        {% block song %}
+        {% endblock %}
+    </div>
     <script src="{{ url_for('static', filename='javascript/index.js') }}"></script>
 {% endblock %}

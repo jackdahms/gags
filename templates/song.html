@@ -1,7 +1,12 @@
 {% extends "index.html" %}
 
 {% block song %}
+    <div class="text-center mb-3">
+        <strong class="pb-2 squiggle">New song by {{ artist_data[0] }} leaked!</strong>
+    </div>
     {% for i in range(lines|length) %}
-        <p class="my-0">{{ i + 1 }}) {{ lines[i] }}</p>
+        <p class="text-center rounded w-100 py-1 my-0" style="{% if i % 2 == 0 %} background: #f2f2f2 {% endif %}">
+            &nbsp;{{ lines[i] }}
+        </p>
     {% endfor %}
 {% endblock %}
