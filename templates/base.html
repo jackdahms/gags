@@ -3,15 +3,17 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Blockoff</title>
+    <title>G.A.G.S.</title>
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 </head>
 <body>
-    <div class="container">
-        <h3 class="mt-5">Enter an artist's name:</h3>
+    <div class="container w-50">
+        <h1 class="d-inline-block my-3">G.A.G.S.</h1>
+        <small>(good at generating songs)</small>
         <form id="searchForm" class="form" action="{{ url_for('find') }}">
+            <h5 class="">Enter an artist's name below:</h5>
             <div class="input-group">
                 <input type="text" class="form-control" id="artistInput" name="artist" placeholder="e.g. Radiohead" aria-describedby="artistButton">
                 <div class="input-group-append">
