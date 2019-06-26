@@ -3,5 +3,6 @@ $("#generateForm").submit(function(event) {
     // https://stackoverflow.com/questions/21938788/jquery-function-before-form-submission
     event.preventDefault();
     $("#loadingDiv").removeClass("d-none");
+    $("#songDiv").addClass("d-none");
     $(this).unbind('submit').submit(); 
 });
