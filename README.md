@@ -1,4 +1,5 @@
-# blockoff
+# G.A.G.S
+#### Good At Generating Songs
 Turn off writer's block by taking inspiration from original, unreleased songs in the style of any artist.
 
 # TODO
