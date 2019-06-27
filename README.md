@@ -7,6 +7,7 @@ Turn off writer's block by taking inspiration from original, unreleased songs in
 - support for n-grams
 
 ## Low priority:
+- if artist is past TTL, refresh
 - what to do about punctuation?
     - ignore when building chain?
 - advanced options dropdown
