@@ -5,6 +5,7 @@ import random
 import re
 import requests
 
+import pymongo
 from bs4 import BeautifulSoup
 
 LIBRARY = 'static/artists/'
@@ -12,6 +13,7 @@ MANIFEST = 'static/manifest.csv'
 INDEX = 'songs.tsv' # use .tsv so we can allow songs with commas
 DELIMITER = '\t' # delimiter for index
 V = lambda *args: None # Verbose printing function. Does nothing by default
+DB = pymongo.MongoClient()['database']
 
 class Song():
 
@@ -201,31 +203,34 @@ def load_songs(artist_id, token):
 
 def load_artist_id(name):
     '''
-    Checks manifest and Genius for an ID that corresponds to name.
+    Checks database and Genius for an ID that corresponds to name.
     Raises an exception if one can't be found.
     '''
     name = name.replace(' ', '-').lower()
     artist_id = None
 
-    # Check manifest
-    V('Checking manifest for id...')
-    if os.path.exists(MANIFEST):
-        with open(MANIFEST) as f:
-            rows = [row.strip().split(',') for row in f.readlines()[1:]]
-            for row in rows:
-                if name == row[0]:
-                    V('Found!')
-                    artist_id = row[1]
+    # Check database
+    V('Checking databse for id...')
+    artists = DB['artists']
+    result = artists.find_one({'name': name})
 
-    # if we didn't find it, get it from Genius
-    if artist_id is None:
+    # if we didn't find it, get it from Genius and add it to the databse
+    if result is None:
         V('Not found. Checking Genius...')
         url = 'https://www.genius.com/artists/' + name
         response = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'})
         if response.status_code == 200:
             artist_id = re.search(r'(?<=content="\/artists\/)\d+(?=")', response.text).group(0)
+            artist = {
+                'name': name,
+                'genius_id': artist_id
+            }
+            artists.insert_one(artist)
         else:
             raise Exception('Artist not found! (HTTP Code %d)' % response.status_code)
+    else:
+        V('Found!')
+        artist_id = result['genius_id']
 
     return artist_id
 
@@ -239,31 +244,11 @@ def set_verbose(verbose):
             print(*args)
         V = verbose_print
 
-def add_to_manifest(name, artist_id):
-    if not os.path.exists(MANIFEST):
-        with open(MANIFEST, 'w') as f:
-            f.write('name,id,updated\n')
-
-    with open(MANIFEST) as f:
-        manifest = [r.strip().split(',') for r in f.readlines()]
-
-    # Does this artist already exist?
-    found = artist_id in [r[1] for r in manifest[1:]]
-    # If not, add him
-    if not found:
-        now = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S')
-        manifest.append([name, artist_id, now])
-
-    with open(MANIFEST, 'w') as f:
-        for row in manifest:
-            f.write('%s,%s,%s\n' % (row[0], row[1], row[2]))
-
 if __name__ == '__main__':
     set_verbose(True)
     token = load_token()
     artist_name = input('Artist name? ').replace(' ', '-').lower()
     artist_id = load_artist_id(artist_name)
-    add_to_manifest(artist_name, artist_id)
     songs = load_songs(artist_id, token)
     chain = build_chain(songs)
     print(generate_song(chain))
