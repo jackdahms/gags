@@ -4,12 +4,26 @@ import os.path
 import random
 import re
 import requests
+from random import normalvariate
+from threading import Thread
 
 import pymongo
+from bson.objectid import ObjectId
 from bs4 import BeautifulSoup
 
-V = lambda *args: None # Verbose printing function. Does nothing by default
 DB = pymongo.MongoClient()['database']
+TOKEN = open('token').read()
+V = lambda *args: None # Verbose printing function. Does nothing by default
+
+def stdev(A, mean):
+    '''
+    Returns standard deviation of values in A.
+    Treats values in A as samples from a population.
+    '''
+    residuals = [(mean - x)**2 for x in A]
+    var = sum(residuals) / (len(A) - 1)
+    stdev = math.sqrt(var)
+    return stdev
 
 class Song():
 
@@ -25,7 +39,7 @@ class Song():
         '''
         return len(self.text.split('\n'))
 
-    def dict(self):
+    def to_dict(self):
         return {
             'title': self.title,
             'id': self.id,
@@ -90,7 +104,7 @@ def build_chain(songs, n=2):
                 chain[key] = [words[i + 1]]
     return chain
 
-def song_count(artist_id, token):
+def song_count(artist_id, token=TOKEN):
     '''
     Returns number of songs by an artist
     '''   
@@ -141,7 +155,11 @@ def generate_song(chain, line_count=21):
 
     return song
 
-def load_songs(artist_id, token):
+def job_status(job_id):
+    job = DB.jobs.find_one({'_id': ObjectId(job_id)})
+    return (job['current_song'], job['song_count'], job['lines'])
+
+def load_songs(artist_id, token=TOKEN):
     '''
     Returns generator of loaded songs.
     '''   
@@ -168,7 +186,7 @@ def load_songs(artist_id, token):
                 s = Song(song['title'], song['id'], song['url'])
                 songs.append(s)
             next_page = json['response']['next_page']
-        DB.artists.update_one({'id': artist_id}, {'$set': {'songs': [s.dict() for s in songs]}})
+        DB.artists.update_one({'id': artist_id}, {'$set': {'songs': [s.to_dict() for s in songs]}})
 
     # Try and load all the lyrics from files. If they don't exist, scrape 'em.
     for song in songs:
@@ -214,10 +232,7 @@ def load_artist_id(name):
 
     return artist_id
 
-def load_token(filename='token'):
-    return open(filename).read()
-
-def new_job(artist, artist_id, ngrams):
+def new_job(artist, artist_id, ngrams, token=TOKEN):
     '''
     Creates a document to represent a job to generate a song.
     Jobs track song counting, loading, and generation
@@ -228,9 +243,33 @@ def new_job(artist, artist_id, ngrams):
         'artist_id': artist_id,
         'ngrams': ngrams,
         'song_count': -1, # -1 until songs fully counted
-        'current_song': 0 
+        'current_song': 0,
+        'lines': []
     }
-    job_id = DB.jobs.insert_one(job)
+    job_id = DB.jobs.insert_one(job).inserted_id
+
+    def new(artist_id, job_id, token):
+        count = song_count(artist_id, token)
+        DB.jobs.update_one({'_id': ObjectId(job_id)}, {'$set': {'song_count': count}})
+
+        songs = []
+        for song in load_songs(artist_id, token):
+            songs.append(song)
+            DB.jobs.update_one({'_id': ObjectId(job_id)}, {'$inc': {'current_song': 1}})
+    
+        # new song length sampled from normal distribution based on other songs
+        song_lengths = [len(s) for s in songs]
+        mean_line_count = sum(song_lengths) / len(songs)
+        sd = stdev(song_lengths, mean_line_count)
+        sample_length = normalvariate(mean_line_count, sd)
+
+        chain = build_chain(songs)
+        lines = generate_song(chain, sample_length).split('\n')
+        DB.jobs.update_one({'_id': ObjectId(job_id)}, {'$set': {'lines': lines}})
+
+    t = Thread(target=new, args=(artist_id, job_id, token))
+    t.start()
+
     return job_id
 
 def set_verbose(verbose):
@@ -242,7 +281,6 @@ def set_verbose(verbose):
 
 if __name__ == '__main__':
     set_verbose(True)
-    token = load_token()
     artist_name = input('Artist name? ').replace(' ', '-').lower()
     artist_id = load_artist_id(artist_name)
     songs = load_songs(artist_id, token)

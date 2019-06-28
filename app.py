@@ -1,3 +1,4 @@
+import json
 import time
 from random import normalvariate
 
@@ -6,19 +7,7 @@ from flask import flash, redirect, render_template, request, url_for
 
 from gags import * 
 
-TOKEN = load_token()
-
 app = Flask(__name__)
-
-def stdev(A, mean):
-    '''
-    Returns standard deviation of values in A.
-    Treats values in A as samples from a population.
-    '''
-    residuals = [(mean - x)**2 for x in A]
-    var = sum(residuals) / (len(A) - 1)
-    stdev = math.sqrt(var)
-    return stdev
 
 @app.route('/')
 def index():
@@ -60,30 +49,35 @@ def generate():
 
     if 'ngrams' not in request.args.keys():
         return render_template('index', found=True, artist_data=(artist, artist_id))
+    ngrams = request.args.get('ngrams')
+    try:
+        ngrams = int(ngrams)
+    except:
+        return render_template('index', found=True, artist_data=(artist, artist_id))
 
     job_id = new_job(artist, artist_id, ngrams)
-
-    '''
-    i = 0
-    count = song_count(artist_id, TOKEN)
-    songs = []
-    for song in load_songs(artist_id, TOKEN):
-        songs.append(song)
-        i += 1
-
-    # new song length sampled from normal distribution based on other songs
-    song_lengths = [len(s) for s in songs]
-    mean_line_count = sum(song_lengths) / len(songs)
-    sd = stdev(song_lengths, mean_line_count)
-    sample_length = normalvariate(mean_line_count, sd)
-
-    chain = build_chain(songs)
-    lines = generate_song(chain, sample_length).split('\n')
     return render_template('song.html', 
                            found=True, 
                            artist_data=(artist, artist_id), 
-                           lines=lines)
+                           job_id=job_id)
+
+@app.route('/status')
+def status():
     '''
+    Check status of a job.
+    '''
+    if 'job_id' not in request.args.keys():
+        return redirect(url_for('index'))
+    job_id = request.args.get('job_id')
+
+    current, total, lines = job_status(job_id);
+
+    payload = {
+        'song_count': total,
+        'current_song': current,
+        'lyrics': lines
+    }
+    return json.dumps(payload)
 
 if __name__ == "__main__":
     app.secret_key = '123'

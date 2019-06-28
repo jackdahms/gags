@@ -40,14 +40,6 @@
             Couldn't find "{{ artist_data[0] }}".
         </div>
     {% endif %}
-    <div class="d-flex justify-content-center">
-        <div id="loadingDiv" class="spinner-border text-primary d-none my-4" role="status">
-            <span class="sr-only">Loading songs...</span>
-        </div>
-    </div>
-    <div id="songDiv">
-        {% block song %}
-        {% endblock %}
-    </div>
-    <script src="{{ url_for('static', filename='javascript/index.js') }}"></script>
+    {% block song %}
+    {% endblock %}
 {% endblock %}
