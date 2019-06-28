@@ -8,10 +8,6 @@ import requests
 import pymongo
 from bs4 import BeautifulSoup
 
-LIBRARY = 'static/artists/'
-MANIFEST = 'static/manifest.csv'
-INDEX = 'songs.tsv' # use .tsv so we can allow songs with commas
-DELIMITER = '\t' # delimiter for index
 V = lambda *args: None # Verbose printing function. Does nothing by default
 DB = pymongo.MongoClient()['database']
 
@@ -22,19 +18,30 @@ class Song():
         self.id = song_id
         self.url = url
 
+
     def __len__(self):
         '''
         Returns number of lines in song.
         '''
         return len(self.text.split('\n'))
 
-    def load(self, location):
-        with open(location + str(self.id)) as f:
-            self.set_text(''.join(f.readlines()))
+    def dict(self):
+        return {
+            'title': self.title,
+            'id': self.id,
+            'url': self.url
+        }
 
-    def save(self, location):
-        with open(location + str(self.id), 'w') as f:
-            f.write(self.raw_text)
+    def load(self):
+        song = DB.songs.find_one({'id': self.id})
+        self.set_text(song['raw_text'])
+
+    def save(self):
+        song = {
+            'id': self.id,
+            'raw_text': self.raw_text
+        }
+        DB.songs.insert_one(song)
 
     def set_text(self, raw_text):
         self.raw_text = raw_text
@@ -56,8 +63,8 @@ def build_chain(songs, n=2):
     V('Building lyric model...')
 
     for i, song in enumerate(songs):
-        # V('Calculating %d/%d' % (i, len(self.songs)))
-
+        V('Calculating %d/?' % i)
+        
         lyrics = song.text
 
         # split song into words
@@ -150,27 +157,15 @@ def load_songs(artist_id, token):
     '''
     Returns generator of loaded songs.
     '''   
-    header_row = 'title%sid%surl\n' % (2 * (DELIMITER,))
-    location = LIBRARY + artist_id + '/songs/'
-
-    # Make sure our paths are valid
-    if not os.path.exists(LIBRARY):
-        os.mkdir(LIBRARY)
-    if not os.path.exists(LIBRARY + artist_id):
-        os.mkdir(LIBRARY + artist_id)
-    if not os.path.exists(location):
-        os.mkdir(location)
-    if not os.path.exists(LIBRARY + artist_id + '/' + INDEX):
-        # use .tsv not .csv so songs with commas in the name don't mess up
-        with open(LIBRARY + artist_id + '/' + INDEX, 'w') as f:
-            f.write(header_row)
+    songs = []
 
     # Load existing song names
-    songs = []
-    with open(LIBRARY + artist_id + '/' + INDEX) as f:
-        rows = [r.strip().split(DELIMITER) for r in f.readlines()[1:]]
-        for row in rows:
-            songs.append(Song(row[0], row[1], row[2]))
+    artist = DB.artists.find_one({'genius_id': artist_id})
+    if artist is None:
+        raise Exception('No artist with id ' + str(artist_id) + ' found!')
+    for s in artist['songs']:
+        song = Song(s['title'], s['id'], s['url'])
+        songs.append(song)
 
     if len(songs) == 0:
         # We probably just created the list. Let's check Genius.
@@ -185,20 +180,15 @@ def load_songs(artist_id, token):
                 s = Song(song['title'], song['id'], song['url'])
                 songs.append(s)
             next_page = json['response']['next_page']
-
-    # Hopefully we have more songs now. Let's save them back to the list.
-    with open(LIBRARY + artist_id + '/' + INDEX, 'w') as f:
-        f.write(header_row)
-        for song in songs:
-            f.write('%s\t%s\t%s\n' % (song.title, song.id, song.url))
+        DB.artists.update_one({'id': artist_id}, {'$set': {'songs': [s.dict() for s in songs]}})
 
     # Try and load all the lyrics from files. If they don't exist, scrape 'em.
     for song in songs:
         try:
-            song.load(location)
+            song.load()
         except:
             song.scrape()
-            song.save(location)
+            song.save()
         yield song
 
 def load_artist_id(name):
@@ -223,13 +213,15 @@ def load_artist_id(name):
             artist_id = re.search(r'(?<=content="\/artists\/)\d+(?=")', response.text).group(0)
             artist = {
                 'name': name,
-                'genius_id': artist_id
+                'genius_id': artist_id,
+                'songs': []
             }
             artists.insert_one(artist)
         else:
             raise Exception('Artist not found! (HTTP Code %d)' % response.status_code)
     else:
         V('Found!')
+        V(result)
         artist_id = result['genius_id']
 
     return artist_id
