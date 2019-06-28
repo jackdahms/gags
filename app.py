@@ -61,6 +61,9 @@ def generate():
     if 'ngrams' not in request.args.keys():
         return render_template('index', found=True, artist_data=(artist, artist_id))
 
+    job_id = new_job(artist, artist_id, ngrams)
+
+    '''
     i = 0
     count = song_count(artist_id, TOKEN)
     songs = []
@@ -80,6 +83,7 @@ def generate():
                            found=True, 
                            artist_data=(artist, artist_id), 
                            lines=lines)
+    '''
 
 if __name__ == "__main__":
     app.secret_key = '123'

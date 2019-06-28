@@ -217,6 +217,22 @@ def load_artist_id(name):
 def load_token(filename='token'):
     return open(filename).read()
 
+def new_job(artist, artist_id, ngrams):
+    '''
+    Creates a document to represent a job to generate a song.
+    Jobs track song counting, loading, and generation
+    Returns unique id of job.
+    '''
+    job = {
+        'artist': artist,
+        'artist_id': artist_id,
+        'ngrams': ngrams,
+        'song_count': -1, # -1 until songs fully counted
+        'current_song': 0 
+    }
+    job_id = DB.jobs.insert_one(job)
+    return job_id
+
 def set_verbose(verbose):
     if verbose:
         global V
