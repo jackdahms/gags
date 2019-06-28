@@ -6,6 +6,18 @@ Turn off writer's block by taking inspiration from original, unreleased songs in
 - progress bar on song loading
 - support for n-grams
 
+## Mongo Collections
+- artists
+    - name: hyphenated lower case name
+    - genius_id: Genius' artist ID
+    - songs: array of dictionaries
+        - title: title of song
+        - id: Genius' song ID
+        - url: url to Genius page with lyrics
+- songs
+    - id: Genius' song ID
+    - raw_text: as scraped from HTML
+
 ## Low priority:
 - if artist is past TTL, refresh
 - what to do about punctuation?
@@ -19,7 +31,7 @@ Turn off writer's block by taking inspiration from original, unreleased songs in
 - global token variable in blockoff.py?
 - better song display
 - extra space at the beginning of each line in generate_song
-- if artist has any songs in songs.tsv, we don't look for more songs. 
+- if artist has any songs, we don't look for more songs. 
     - what if more were added?
     - what if we were interrupted when adding songs last time?
     - search for songs by default, add advanced option to disable search
@@ -27,12 +39,7 @@ Turn off writer's block by taking inspiration from original, unreleased songs in
     - probably really long songs...
 - handle outliers in song lengths?
     - center on median instead?
-- keep manifest loaded?
-    - race conditions... blech
-    - use an actual database lol
-- should all that logic even be in the constructor?
-- split artist class methods into logical components
-    - e.g. updating manifest shouldn't be in fetch_id
+    - randomly sample song lengths?
 - web interface
     - filter songs/albums used to generate
     - view table of artists with statistics
