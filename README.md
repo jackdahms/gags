@@ -3,7 +3,7 @@
 Turn off writer's block by taking inspiration from original, unreleased songs in the style of any artist.
 
 # TODO
-- progress bar on song loading
+- take action if ajax times out
 - support for n-grams
 
 ## Mongo Collections
