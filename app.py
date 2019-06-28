@@ -41,6 +41,15 @@ def find():
 
 @app.route('/generate')
 def generate():
+    '''
+    TODO
+    1. create a job in database
+        - client displays spinner
+    2. client checks job
+        - if songs counted, client displays progress bar
+        - if songs loaded, client updates progress bar
+    3. remove job
+    '''
     if 'artist' not in request.args.keys():
         return redirect(url_for('index'))
     artist = request.args.get('artist')
