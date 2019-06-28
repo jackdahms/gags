@@ -35,7 +35,6 @@ def find():
 
     try:
         artist_id = load_artist_id(artist)
-        add_to_manifest(artist, artist_id)
         return render_template('index.html', found=True, artist_data=(artist, artist_id))
     except:
         return render_template('index.html', found=False, artist_data=(artist, None))
