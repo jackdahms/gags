@@ -64,7 +64,7 @@ def build_chain(songs, n=2):
 
     for i, song in enumerate(songs):
         V('Calculating %d/?' % i)
-        
+
         lyrics = song.text
 
         # split song into words
@@ -92,25 +92,13 @@ def build_chain(songs, n=2):
 
 def song_count(artist_id, token):
     '''
-    Returns number of songs
+    Returns number of songs by an artist
     '''   
-    headers = 'title%sid%surl\n' % (2 * (DELIMITER,))
 
-    # Make sure our paths are valid
-    if not os.path.exists(LIBRARY):
-        os.mkdir(LIBRARY)
-    if not os.path.exists(LIBRARY + artist_id):
-        os.mkdir(LIBRARY + artist_id)
-    if not os.path.exists(LIBRARY + artist_id + '/' + INDEX):
-        # use .tsv not .csv so songs with commas in the name don't mess up
-        with open(LIBRARY + artist_id + '/' + INDEX, 'w') as f:
-            f.write(headers)
-
-    # Load existing song names
-    count = 0
-    with open(LIBRARY + artist_id + '/' + INDEX) as f:
-        rows = [r.strip().split(DELIMITER) for r in f.readlines()[1:]]
-        counnt = len(rows)
+    artist = DB.artists.find_one({'genius_id': artist_id})
+    if artist is None:
+        raise Exception('No artist with id ' + str(artist_id) + ' found!')
+    count = len(artist['songs'])
 
     if count == 0:
         # We probably just created the list. Let's check Genius.
