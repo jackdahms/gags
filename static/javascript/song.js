@@ -5,6 +5,9 @@ let status = function() {
         },
         error: function(xhr, text_status, error_thrown) {
             console.log(xhr.responseText + ',' + text_status + ',' + error_thrown);
+            if (text_status == "timeout") {
+                status();
+            }
         },
         success: function(data, text_status, xhr) {
             data = JSON.parse(data);
@@ -31,13 +34,14 @@ let update_progress_bar = function (current, total) {
     $("#progressDiv").removeClass("d-none");
     bar = $("#progressBar");
     bar.text(current + "/" + total);
-    bar.css("width", ((current / total) * 100) + "%");
+    width = Math.max(10, (current / total) * 100);
+    bar.css("width", width + "%");
 }
 
 let display_song = function(lyrics) {
     $("#spinningDiv").addClass("d-none");
     $("#progressDiv").addClass("d-none");
-    song = $("#songDiv")
+    song = $("#songDiv");
     song.removeClass("d-none");
 
     for (let i = 0; i < lyrics.length; i++) {
