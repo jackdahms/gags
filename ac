@@ -1,0 +1,4 @@
+# git commit -am "message" will add all changed files to a commit
+# this script lets me add specific files and commit them in one command
+git add "${@:2}"
+git commit -m "$1"
