@@ -19,6 +19,16 @@ Turn off writer's block by taking inspiration from original, unreleased songs in
     - raw_text: as scraped from HTML
 
 ## Low priority:
+- clean up everything
+- ugly when progress smaller than text
+- ugly when progress bar created but 0 songs loaded, then progress bar dissapears because song loads in <1s
+- default search for radiohead
+- better job method design
+- only using polling for long jobs?
+    - don't need to wait five seconds if songs are already scraped
+- mongo automatically delete jobs
+- add api exception for status()
+- use single data parameter when rendering templates and store that in base.html head so all javascript files have acces to flask variables
 - don't change styling of artist name input in search box
 - if artist is past TTL, refresh
 - what to do about punctuation?
@@ -29,7 +39,7 @@ Turn off writer's block by taking inspiration from original, unreleased songs in
 - figure out better design for load_songs
     - build_index() returns songs?
     - load_songs() yeilds progress?
-- global token variable in blockoff.py?
+- global token variable in gags.py?
 - better song display
 - extra space at the beginning of each line in generate_song
 - if artist has any songs, we don't look for more songs. 
