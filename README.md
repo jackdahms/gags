@@ -19,6 +19,7 @@ Turn off writer's block by taking inspiration from original, unreleased songs in
     - raw_text: as scraped from HTML
 
 ## Low priority:
+- don't change styling of artist name input in search box
 - if artist is past TTL, refresh
 - what to do about punctuation?
     - ignore when building chain?

@@ -8,6 +8,9 @@
     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <style>
+        #gagsH1:hover {
+            cursor: pointer;
+        }
         .squiggle {
             background-image: url("data:image/svg+xml;charset=utf8,%3Csvg id='squiggle-link' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' xmlns:ev='http://www.w3.org/2001/xml-events' viewBox='0 0 20 4'%3E%3Cstyle type='text/css'%3E.squiggle{animation:shift .3s linear infinite;}@keyframes shift {from {transform:translateX(0);}to {transform:translateX(-20px);}}%3C/style%3E%3Cpath fill='none' stroke='black' stroke-width='1' class='squiggle' d='M0,3.5 c 5,0,5,-3,10,-3 s 5,3,10,3 c 5,0,5,-3,10,-3 s 5,3,10,3'/%3E%3C/svg%3E");
             background-position: 0 90%;
@@ -16,22 +19,19 @@
             text-decoration: none;
         }
     </style>
+    <script>
+        // can't use jinja2 in standalone .js files, so we include what we need here
+        // as global variables
+        var BASE_URL = "{{ url_for('index') }}";
+    </script>
 </head>
 <body>
     <div class="container w-50 pt-2">
-        <h1 class="d-inline-block my-3">G.A.G.S.</h1>
+        <h1 id="gagsH1" class="d-inline-block my-3">G.A.G.S.</h1>
         <small>(good at generating songs)</small>
-        <form id="searchForm" class="form" action="{{ url_for('find') }}">
-            <h5 class="">Enter an artist's name below:</h5>
-            <div class="input-group">
-                <input type="text" class="form-control" id="artistInput" name="artist" placeholder="e.g. Radiohead" aria-describedby="artistButton">
-                <div class="input-group-append">
-                    <button type="submit" class="btn btn-outline-primary mb-2" id="artistButton">Search</button>
-                </div>
-            </div>
-        </form>
         {% block content %}
         {% endblock %}
     </div>
+    <script src="{{ url_for('static', filename='javascript/base.js') }}"></script>
 </body>
 </html>
