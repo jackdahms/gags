@@ -1,3 +1,5 @@
+var job_id = data.job_id
+
 let status = function() {
     setTimeout(function() {$.ajax({
         data: {
@@ -11,12 +13,13 @@ let status = function() {
         },
         success: function(data, text_status, xhr) {
             data = JSON.parse(data);
+            console.log(data);
             let total = data.song_count;
             let current = data.current_song;
             if (total == -1) {
                 // We're still counting songs
                 status();
-            } else if (current == total) {
+            } else if (current == total && data.lyrics.length > 0) {
                 // Display lyrics
                 display_song(data.lyrics);
             } else {
@@ -25,7 +28,7 @@ let status = function() {
                 status();
             }
         },
-        url: job_url
+        url: JOB_URL
     })}, 1000);
 };
 

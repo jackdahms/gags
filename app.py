@@ -1,9 +1,9 @@
-import json
 import time
+from json import dumps
 from random import normalvariate
 
 from flask import Flask
-from flask import flash, redirect, render_template, request, url_for
+from flask import jsonify, redirect, render_template, request, url_for
 
 from gags import * 
 
@@ -11,55 +11,57 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', data=dumps({}))
 
 @app.route('/find')
 def find():
-    if 'artist' not in request.args.keys():
+    if 'artist' not in request.args:
         return redirect(url_for('index'))
-
-    artist = request.args.get('artist').strip().lower().replace(' ', '-')
+    
+    artist_input = request.args['artist']
+    artist = artist_input.strip().lower().replace(' ', '-')
     if artist == '':
-        return redirect(url_for('index'))
+        artist_input = 'Radiohead'
+        artist = 'radiohead'
 
+    data = {
+        'artist': artist,
+        'artist_input': artist_input,
+    }
     try:
         artist_id = load_artist_id(artist)
-        return render_template('index.html', found=True, artist_data=(artist, artist_id))
+        data['found'] = True
+        data['artist_id'] = artist_id
     except:
-        return render_template('index.html', found=False, artist_data=(artist, None))
+        data['found'] = False
+
+    return render_template('index.html', data=data)
 
 @app.route('/generate')
 def generate():
-    '''
-    TODO
-    1. create a job in database
-        - client displays spinner
-    2. client checks job
-        - if songs counted, client displays progress bar
-        - if songs loaded, client updates progress bar
-    3. remove job
-    '''
-    if 'artist' not in request.args.keys():
+    if 'artist' not in request.args:
         return redirect(url_for('index'))
-    artist = request.args.get('artist')
+    data = {'artist': request.args['artist']}
 
-    if 'artist_id' not in request.args.keys():
-        return redirect(url_for('find', artist=request.args.get('artist')))
-    artist_id = request.args.get('artist_id')
+    if 'artist_input' not in request.args:
+        data['artist_input'] = data['artist']
+    else:
+        data['artist_input'] = request.args['artist_input']
 
-    if 'ngrams' not in request.args.keys():
-        return render_template('index', found=True, artist_data=(artist, artist_id))
-    ngrams = request.args.get('ngrams')
+    if 'artist_id' not in request.args:
+        return redirect(url_for('find', data=data))
+    data['artist_id'] = request.args['artist_id']
+    data['found'] = True
+
+    if 'ngrams' not in request.args:
+        return render_template('index.html', data=data)
     try:
-        ngrams = int(ngrams)
+        data['ngrams'] = int(request.args['ngrams'])
     except:
-        return render_template('index', found=True, artist_data=(artist, artist_id))
+        return render_template('index.html', data=data)
 
-    job_id = new_job(artist, artist_id, ngrams)
-    return render_template('song.html', 
-                           found=True, 
-                           artist_data=(artist, artist_id), 
-                           job_id=job_id)
+    data['job_id'] = str(new_job(data['artist'], data['artist_id'], data['ngrams']))
+    return render_template('song.html', data=data)
 
 @app.route('/status')
 def status():
@@ -77,7 +79,7 @@ def status():
         'current_song': current,
         'lyrics': lines
     }
-    return json.dumps(payload)
+    return dumps(payload)
 
 if __name__ == "__main__":
     app.secret_key = '123'

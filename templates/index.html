@@ -4,23 +4,20 @@
     <form id="searchForm" class="form" action="{{ url_for('find') }}">
         <h5 class="">Enter an artist's name below:</h5>
         <div class="input-group">
-            {% if artist_data is defined %}
-                <input type="text" class="form-control" id="artistInput" name="artist" placeholder="e.g. Radiohead" aria-describedby="artistButton" value="{{ artist_data[0] }}">
-            {% else %}
-                <input type="text" class="form-control" id="artistInput" name="artist" placeholder="e.g. Radiohead" aria-describedby="artistButton">
-            {% endif %}
+            <input type="text" class="form-control" id="artistInput" name="artist" placeholder="e.g. Radiohead" aria-describedby="artistButton" value="{{ data['artist_input'] }}">
             <div class="input-group-append">
                 <button type="submit" class="btn btn-outline-primary mb-2" id="artistButton">Search</button>
             </div>
         </div>
     </form>
-    {% if found is defined and found %}
+    {% if 'found' in data and data['found'] %}
         <div class="alert alert-success my-2">
-            {{ artist_data[0] }} found with ID {{ artist_data[1] }}.
+            {{ data['artist'] }} found with ID {{ data['artist_id'] }}.
         </div>
         <form id="generateForm" class="form pt-2" action="{{ url_for('generate') }}">
-            <input type="hidden" name="artist" value="{{ artist_data[0] }}">
-            <input type="hidden" name="artist_id" value="{{ artist_data[1] }}">
+            <input type="hidden" name="artist" value="{{ data['artist'] }}">
+            <input type="hidden" name="artist_input" value="{{ data['artist_input'] }}">
+            <input type="hidden" name="artist_id" value="{{ data['artist_id'] }}">
             <div class="form-group row">
                 <div class="col">
                     <label for="ngramInput" class="pt-1 pr-3">Size of n-grams:</label>
@@ -35,11 +32,12 @@
                 </div>
             </div>
         </form>
-    {% elif found is defined %}
+    {% elif 'found' in data %}
         <div class="alert alert-danger my-2">
-            Couldn't find "{{ artist_data[0] }}".
+            Couldn't find "{{ data['artist_input'] }}".
         </div>
     {% endif %}
     {% block song %}
     {% endblock %}
+    <script src="{{ url_for('static', filename='javascript/index.js') }}"></script>
 {% endblock %}

@@ -7,30 +7,12 @@
         </div>
     </div>
     <div id="progressDiv" class="progress d-none">
-        <div id="progressBar" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+        <div id="progressBar" class="progress-bar w-10" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
     </div>
-    <!--
-    {% if lines is defined %}
-        <div id="songDiv">
-            <div class="text-center mb-3">
-                <strong class="pb-2 squiggle">New song by {{ artist_data[0] }} leaked!</strong>
-            </div>
-            {% for i in range(lines|length) %}
-                <p class="text-center rounded w-100 py-1 my-0" style="{% if i % 2 == 0 %} background: #f2f2f2 {% endif %}">
-                    &nbsp;{{ lines[i] }}
-                </p>
-            {% endfor %}
-        </div>
-    {% endif %}
-    -->
     <div id="songDiv" class="d-none">
         <div class="text-center mb-3">
-            <strong class="pb-2 squiggle">New song by {{ artist_data[0] }} leaked!</strong>
+            <strong class="pb-2 squiggle">New song by {{ data['artist'] }} leaked!</strong>
         </div>
     </div>
-    <script>
-        var job_id = "{{ job_id }}";
-        var job_url = "{{ url_for('status') }}"
-    </script>
     <script src="{{ url_for('static', filename='javascript/song.js') }}"></script>
 {% endblock %}
