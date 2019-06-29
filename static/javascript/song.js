@@ -14,6 +14,7 @@ let status = function() {
         },
         success: function(data, text_status, xhr) {
             job = JSON.parse(data);
+            if (debug) {console.log(job);}
             if (job.lines.length > 0) {
                 display_song(job.lines);
             } else {
@@ -28,10 +29,12 @@ let status = function() {
 let update_progress_bar = function (current, total) {
     $("#spinningDiv").addClass("d-none");
     $("#progressDiv").removeClass("d-none");
-    bar = $("#progressBar");
+    let bar = $("#progressBar");
     bar.text(current + "/" + total);
-    // add 1 to avoid divide by zeros
-    width = Math.max(10, (current / (total+1)) * 100);
+    let width = 10;
+    if (total != 0) {
+        width = Math.max(10, (current / total) * 100);
+    }
     bar.css("width", width + "%");
 }
 

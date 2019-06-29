@@ -153,7 +153,6 @@ def load_songs(artist_id, job_id=None, token=TOKEN):
     Returns list of Song objects with id, title, and url.
     '''   
     songs = []
-
     # Load existing song names
     artist = DB.artists.find_one({'_id': artist_id})
     if artist is None:
@@ -230,8 +229,7 @@ def new_job(artist_id, ngrams, token=TOKEN):
     job = {
         'artist_id': artist_id,
         'ngrams': ngrams,
-        'loaded': False,
-        'total': -1,
+        'total': 0,
         'current': 0,
         'lines': []
     }
@@ -248,9 +246,6 @@ def new_job(artist_id, ngrams, token=TOKEN):
         mean_line_count = sum(song_lengths) / len(songs)
         sd = stdev(song_lengths, mean_line_count)
         sample_length = normalvariate(mean_line_count, sd)
-
-        for song in load_songs(artist_id, token):
-            songs.append(song)
     
         lines = generate_song(chain, sample_length).split('\n')
         DB.jobs.update_one({'_id': ObjectId(job_id)}, {'$set': {'lines': lines}})
