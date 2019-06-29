@@ -3,7 +3,14 @@
 Turn off writer's block by taking inspiration from original, unreleased songs in the style of any artist.
 
 # TODO
-- support for n-grams
+- n-grams
+- advanced options
+    - force search for new songs
+    - line ending method
+        - mean centered normal
+        - median centered
+        - end-of-song character
+        - random sample
 
 ## Mongo Collections
 - artists
@@ -20,8 +27,6 @@ Turn off writer's block by taking inspiration from original, unreleased songs in
 
 ## Low priority:
 - https://stackoverflow.com/questions/118241/calculate-text-width-with-javascript
-- clean up everything
-- better job method design
 - mongo automatically delete jobs
 - add api exception for status()
 - if artist is past TTL, refresh
@@ -30,18 +35,6 @@ Turn off writer's block by taking inspiration from original, unreleased songs in
 - advanced options dropdown
 - song title generation
 - put os.path.joins everywhere
-- figure out better design for load_songs
-    - build_index() returns songs?
-    - load_songs() yeilds progress?
-- if artist has any songs, we don't look for more songs. 
-    - what if more were added?
-    - what if we were interrupted when adding songs last time?
-    - search for songs by default, add advanced option to disable search
-- what happens when using an end of song character instead of sampled line lengths?
-    - probably really long songs...
-- handle outliers in song lengths?
-    - center on median instead?
-    - randomly sample song lengths?
 - web interface
     - filter songs/albums used to generate
     - view table of artists with statistics
