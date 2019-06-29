@@ -3,33 +3,27 @@
 Turn off writer's block by taking inspiration from original, unreleased songs in the style of any artist.
 
 # TODO
-- take action if ajax times out
 - support for n-grams
 
 ## Mongo Collections
 - artists
-    - name: hyphenated lower case name
     - genius_id: Genius' artist ID
+    - name: hyphenated lower case name
     - songs: array of dictionaries
         - title: title of song
         - id: Genius' song ID
         - url: url to Genius page with lyrics
+- jobs
 - songs
     - id: Genius' song ID
     - raw_text: as scraped from HTML
 
 ## Low priority:
+- https://stackoverflow.com/questions/118241/calculate-text-width-with-javascript
 - clean up everything
-- ugly when progress smaller than text
-- ugly when progress bar created but 0 songs loaded, then progress bar dissapears because song loads in <1s
-- default search for radiohead
 - better job method design
-- only using polling for long jobs?
-    - don't need to wait five seconds if songs are already scraped
 - mongo automatically delete jobs
 - add api exception for status()
-- use single data parameter when rendering templates and store that in base.html head so all javascript files have acces to flask variables
-- don't change styling of artist name input in search box
 - if artist is past TTL, refresh
 - what to do about punctuation?
     - ignore when building chain?
@@ -39,9 +33,6 @@ Turn off writer's block by taking inspiration from original, unreleased songs in
 - figure out better design for load_songs
     - build_index() returns songs?
     - load_songs() yeilds progress?
-- global token variable in gags.py?
-- better song display
-- extra space at the beginning of each line in generate_song
 - if artist has any songs, we don't look for more songs. 
     - what if more were added?
     - what if we were interrupted when adding songs last time?
@@ -57,8 +48,6 @@ Turn off writer's block by taking inspiration from original, unreleased songs in
     - option to include featured work
     - button to update for artist? Not good if publicly facing.
 - get lyrics for multiple songs in one request? big bottleneck...
-- get true capitalization from genius
-    - randomly select song length from existing lengths?
 - automatically filter live/different versions of songs
     - if duplicates allowed, lyrics will be weighted heavier
 - generate from multiple artists
@@ -75,7 +64,5 @@ Turn off writer's block by taking inspiration from original, unreleased songs in
 - option to separate by verses/choruses/structural elements
     - reuse 1 chorus throughout song
     - randomly include bridge?
-- skulpt for client-side python?
-- keep manifest alphabetized and search for artist with binarysearch
 - replace BeautifulSoup with built-in parser: https://docs.python.org/3/library/html.parser.html
 - carbon ads
