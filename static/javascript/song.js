@@ -1,4 +1,5 @@
-var job_id = data.job_id
+var job_id = data.job_id;
+var debug = false; 
 
 let status = function() {
     setTimeout(function() {$.ajax({
@@ -12,19 +13,11 @@ let status = function() {
             }
         },
         success: function(data, text_status, xhr) {
-            data = JSON.parse(data);
-            console.log(data);
-            let total = data.song_count;
-            let current = data.current_song;
-            if (total == -1) {
-                // We're still counting songs
-                status();
-            } else if (current == total && data.lyrics.length > 0) {
-                // Display lyrics
-                display_song(data.lyrics);
+            job = JSON.parse(data);
+            if (job.lines.length > 0) {
+                display_song(job.lines);
             } else {
-                // Display progress bar
-                update_progress_bar(current, total);
+                update_progress_bar(job.current, job.total);
                 status();
             }
         },
@@ -37,7 +30,8 @@ let update_progress_bar = function (current, total) {
     $("#progressDiv").removeClass("d-none");
     bar = $("#progressBar");
     bar.text(current + "/" + total);
-    width = Math.max(10, (current / total) * 100);
+    // add 1 to avoid divide by zeros
+    width = Math.max(10, (current / (total+1)) * 100);
     bar.css("width", width + "%");
 }
 

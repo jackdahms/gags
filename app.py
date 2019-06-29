@@ -60,7 +60,7 @@ def generate():
     except:
         return render_template('index.html', data=data)
 
-    data['job_id'] = str(new_job(data['artist'], data['artist_id'], data['ngrams']))
+    data['job_id'] = new_job(data['artist_id'], data['ngrams'])
     return render_template('song.html', data=data)
 
 @app.route('/status')
@@ -72,14 +72,8 @@ def status():
         return redirect(url_for('index'))
     job_id = request.args.get('job_id')
 
-    current, total, lines = job_status(job_id);
-
-    payload = {
-        'song_count': total,
-        'current_song': current,
-        'lyrics': lines
-    }
-    return dumps(payload)
+    job = get_job(job_id)
+    return dumps(job)
 
 if __name__ == "__main__":
     app.secret_key = '123'

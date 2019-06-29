@@ -11,7 +11,7 @@ import pymongo
 from bson.objectid import ObjectId
 from bs4 import BeautifulSoup
 
-DB = pymongo.MongoClient()['database']
+DB = pymongo.MongoClient()['library']
 TOKEN = open('token').read()
 V = lambda *args: None # Verbose printing function. Does nothing by default
 
@@ -71,13 +71,23 @@ class Song():
         html = BeautifulSoup(page.text, 'html.parser')
         self.set_text(html.find('div', class_='lyrics').get_text())
 
-def build_chain(songs, n=2):
+def build_chain(songs, n=2, job_id=None):
     # Build markov chain
     chain = {}
     V('Building lyric model...')
 
     for i, song in enumerate(songs):
-        V('Calculating %d/?' % i)
+        # Try and load all the lyrics from files. If they don't exist, scrape 'em
+        try:
+            song.load()
+        except:
+            song.scrape()
+            song.save()
+
+        V('Calculating %d/%d' % (i+1, len(songs)))
+        if job_id is not None:
+            DB.jobs.update_one({'_id': ObjectId(job_id)}, {'$inc': {'current': 1}})
+
 
         lyrics = song.text
 
@@ -103,31 +113,6 @@ def build_chain(songs, n=2):
             else:
                 chain[key] = [words[i + 1]]
     return chain
-
-def song_count(artist_id, token=TOKEN):
-    '''
-    Returns number of songs by an artist
-    '''   
-
-    artist = DB.artists.find_one({'genius_id': artist_id})
-    if artist is None:
-        raise Exception('No artist with id ' + str(artist_id) + ' found!')
-    count = len(artist['songs'])
-
-    if count == 0:
-        # We probably just created the list. Let's check Genius.
-        per_page = 50 # songs per request
-        next_page = 1 # page of results indexed from 1
-        url = 'http://api.genius.com/artists/%s/songs' % artist_id
-        headers = {'Authorization': 'Bearer ' + token}
-        while next_page != None:
-            params = {'per_page': per_page, 'page': next_page}
-            json = requests.get(url, params=params, headers=headers).json()
-            for song in json['response']['songs']:
-                count += 1
-            next_page = json['response']['next_page']
-
-    return count
 
 def generate_song(chain, line_count=21):
     # Generate a new song
@@ -155,18 +140,22 @@ def generate_song(chain, line_count=21):
 
     return song
 
-def job_status(job_id):
-    job = DB.jobs.find_one({'_id': ObjectId(job_id)})
-    return (job['current_song'], job['song_count'], job['lines'])
-
-def load_songs(artist_id, token=TOKEN):
+def get_job(job_id):
     '''
-    Returns generator of loaded songs.
+    Returns serializable job document.
+    '''
+    job = DB.jobs.find_one({'_id': ObjectId(job_id)})
+    job['_id'] = str(job['_id'])
+    return job
+
+def load_songs(artist_id, job_id=None, token=TOKEN):
+    '''
+    Returns list of Song objects with id, title, and url.
     '''   
     songs = []
 
     # Load existing song names
-    artist = DB.artists.find_one({'genius_id': artist_id})
+    artist = DB.artists.find_one({'_id': artist_id})
     if artist is None:
         raise Exception('No artist with id ' + str(artist_id) + ' found!')
     for s in artist['songs']:
@@ -186,16 +175,16 @@ def load_songs(artist_id, token=TOKEN):
                 s = Song(song['title'], song['id'], song['url'])
                 songs.append(s)
             next_page = json['response']['next_page']
-        DB.artists.update_one({'id': artist_id}, {'$set': {'songs': [s.to_dict() for s in songs]}})
+            V('%d songs found...' % len(songs))
+            if job_id is not None:
+                DB.jobs.update_one({'_id': ObjectId(job_id)}, {'$set': {'total': len(songs)}})
+        DB.artists.update_one({'_id': artist_id}, {'$set': {'songs': [s.to_dict() for s in songs]}})
 
-    # Try and load all the lyrics from files. If they don't exist, scrape 'em.
-    for song in songs:
-        try:
-            song.load()
-        except:
-            song.scrape()
-            song.save()
-        yield song
+    # needs to happen again outside the if in case we never went in the if
+    if job_id is not None:
+        DB.jobs.update_one({'_id': ObjectId(job_id)}, {'$set': {'total': len(songs)}})
+
+    return songs
 
 def load_artist_id(name):
     '''
@@ -218,8 +207,8 @@ def load_artist_id(name):
         if response.status_code == 200:
             artist_id = re.search(r'(?<=content="\/artists\/)\d+(?=")', response.text).group(0)
             artist = {
+                '_id': artist_id,
                 'name': name,
-                'genius_id': artist_id,
                 'songs': []
             }
             artists.insert_one(artist)
@@ -227,43 +216,42 @@ def load_artist_id(name):
             raise Exception('Artist not found! (HTTP Code %d)' % response.status_code)
     else:
         V('Found!')
-        V(result)
-        artist_id = result['genius_id']
+        V(result['_id'])
+        artist_id = result['_id']
 
     return artist_id
 
-def new_job(artist, artist_id, ngrams, token=TOKEN):
+def new_job(artist_id, ngrams, token=TOKEN):
     '''
     Creates a document to represent a job to generate a song.
     Jobs track song counting, loading, and generation
     Returns unique id of job.
     '''
     job = {
-        'artist': artist,
         'artist_id': artist_id,
         'ngrams': ngrams,
-        'song_count': -1, # -1 until songs fully counted
-        'current_song': 0,
+        'loaded': False,
+        'total': -1,
+        'current': 0,
         'lines': []
     }
-    job_id = DB.jobs.insert_one(job).inserted_id
+    job_id = str(DB.jobs.insert_one(job).inserted_id)
 
     def new(artist_id, job_id, token):
-        count = song_count(artist_id, token)
-        DB.jobs.update_one({'_id': ObjectId(job_id)}, {'$set': {'song_count': count}})
+        songs = load_songs(artist_id, job_id)
+        DB.artists.update_one({'_id': artist_id}, {'$set': {'loaded': True}})
 
-        songs = []
-        for song in load_songs(artist_id, token):
-            songs.append(song)
-            DB.jobs.update_one({'_id': ObjectId(job_id)}, {'$inc': {'current_song': 1}})
-    
+        chain = build_chain(songs, job_id=job_id)
+
         # new song length sampled from normal distribution based on other songs
         song_lengths = [len(s) for s in songs]
         mean_line_count = sum(song_lengths) / len(songs)
         sd = stdev(song_lengths, mean_line_count)
         sample_length = normalvariate(mean_line_count, sd)
 
-        chain = build_chain(songs)
+        for song in load_songs(artist_id, token):
+            songs.append(song)
+    
         lines = generate_song(chain, sample_length).split('\n')
         DB.jobs.update_one({'_id': ObjectId(job_id)}, {'$set': {'lines': lines}})
 
@@ -283,6 +271,6 @@ if __name__ == '__main__':
     set_verbose(True)
     artist_name = input('Artist name? ').replace(' ', '-').lower()
     artist_id = load_artist_id(artist_name)
-    songs = load_songs(artist_id, token)
+    songs = load_songs(artist_id)
     chain = build_chain(songs)
     print(generate_song(chain))
