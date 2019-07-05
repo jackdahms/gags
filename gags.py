@@ -46,10 +46,6 @@ class Song():
             'url': self.url
         }
 
-    def load(self):
-        song = DB.songs.find_one({'id': self.id})
-        self.set_text(song['raw_text'])
-
     def save(self):
         song = {
             'id': self.id,
@@ -69,7 +65,11 @@ class Song():
     def scrape(self):
         page = requests.get(self.url)
         html = BeautifulSoup(page.text, 'html.parser')
-        self.set_text(html.find('div', class_='lyrics').get_text())
+        try:
+            self.set_text(html.find('div', class_='lyrics').get_text())
+        except Exception as e:
+            print("Couldn't scrape song: " + str(self.to_dict()))
+            self.set_text('')
 
 def build_chain(songs, n=2, job_id=None):
     # Build markov chain
@@ -77,17 +77,17 @@ def build_chain(songs, n=2, job_id=None):
     V('Building lyric model...')
 
     for i, song in enumerate(songs):
-        # Try and load all the lyrics from files. If they don't exist, scrape 'em
-        try:
-            song.load()
-        except:
+        # Try and load lyrics from DB. If they don't exist, scrape 'em
+        result = DB.songs.find_one({'id': song.id})
+        if result is not None:
+            song.set_text(result['raw_text'])
+        else:
             song.scrape()
             song.save()
 
         V('Calculating %d/%d' % (i+1, len(songs)))
         if job_id is not None:
             DB.jobs.update_one({'_id': ObjectId(job_id)}, {'$inc': {'current': 1}})
-
 
         lyrics = song.text
 
