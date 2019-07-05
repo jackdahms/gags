@@ -3,6 +3,7 @@
 Turn off writer's block by taking inspiration from original, unreleased songs in the style of any artist.
 
 # TODO
+- store n-gram chain in database
 - n-grams
 - advanced options
     - force search for new songs
@@ -26,6 +27,7 @@ Turn off writer's block by taking inspiration from original, unreleased songs in
     - raw_text: as scraped from HTML
 
 ## Low priority:
+- "songs" with track lists are an issue
 - https://stackoverflow.com/questions/118241/calculate-text-width-with-javascript
 - mongo automatically delete jobs
 - add api exception for status()
