@@ -71,7 +71,7 @@ class Song():
             print("Couldn't scrape song: " + str(self.to_dict()))
             self.set_text('')
 
-def build_chain(songs, n=2, job_id=None):
+def build_chain(songs, n=3, job_id=None):
     # Build markov chain
     chain = {}
     V('Building lyric model...')
@@ -106,34 +106,36 @@ def build_chain(songs, n=2, job_id=None):
                 word += c
 
         #build markov chains
-        for i in range(1, len(words) - 2):
-            key = (words[i - 1], words[i])
+        for i in range(n - 2, len(words) - 1):
+            key = tuple([words[k] for k in range(i - n + 2, i + 1)])
             if key in chain:
                 chain[key].append(words[i + 1])
             else:
                 chain[key] = [words[i + 1]]
+    
     return chain
 
 def generate_song(chain, line_count=21):
     # Generate a new song
     # start with a capital letter
-    pair = ('a')
-    while not pair[0][0].isupper():
-        pair = random.choice(list(chain.keys()))
+    key = random.choice(list(chain.keys()))
+    while not key[0][0].isupper():
+        key = random.choice(list(chain.keys()))
+    key_length = len(key)
+
     # generate song
     count = 0
-    song = pair[0] + ' '
+    song = ' '.join(key[:-1])
     while count < line_count:
-        song += pair[1] + ' '
-        if pair[1] == '\n':
+        song += key[-1] + ' '
+        if key[-1] == '\n':
             count += 1
-            if count != line_count:
-                song += '' # '\b'
         try:
-            next_word = random.choice(chain[pair])
+            next_word = random.choice(chain[key])
         except:
-            count += 1
-        pair = (pair[1], next_word)
+            print(str(key) + ' not in model!')
+            next_word = random.choice(list(chain.keys()))[-1]
+        key = key[1:] + (next_word,)
 
     # Removes any blank lines from the beginning/end
     song = song.strip()
@@ -235,11 +237,11 @@ def new_job(artist_id, ngrams, token=TOKEN):
     }
     job_id = str(DB.jobs.insert_one(job).inserted_id)
 
-    def new(artist_id, job_id, token):
+    def new(artist_id, ngrams, job_id, token):
         songs = load_songs(artist_id, job_id)
         DB.artists.update_one({'_id': artist_id}, {'$set': {'loaded': True}})
 
-        chain = build_chain(songs, job_id=job_id)
+        chain = build_chain(songs, ngrams, job_id=job_id)
 
         # new song length sampled from normal distribution based on other songs
         song_lengths = [len(s) for s in songs]
@@ -250,7 +252,7 @@ def new_job(artist_id, ngrams, token=TOKEN):
         lines = generate_song(chain, sample_length).split('\n')
         DB.jobs.update_one({'_id': ObjectId(job_id)}, {'$set': {'lines': lines}})
 
-    t = Thread(target=new, args=(artist_id, job_id, token))
+    t = Thread(target=new, args=(artist_id, ngrams, job_id, token))
     t.start()
 
     return job_id
