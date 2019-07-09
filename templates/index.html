@@ -24,7 +24,11 @@
                 </div>
                 <div class="col">
                     <div class="input-group">
-                        <input type="text" class="form-control rounded-left" id="ngramInput" name="ngrams" value="{{ data['ngrams'] }}" aria-describedby="generateButton">
+                        {% if data['ngrams'] is defined %}
+                            <input type="text" class="form-control rounded-left" id="ngramInput" name="ngrams" value="{{ data['ngrams'] }}" aria-describedby="generateButton">
+                        {% else %}
+                            <input type="text" class="form-control rounded-left" id="ngramInput" name="ngrams" value="3" aria-describedby="generateButton">
+                        {% endif %}
                         <div class="input-group-append">
                             <button class="btn btn-outline-primary" type="submit" id="generateButton">Generate</button>
                         </div>
