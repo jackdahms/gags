@@ -3,6 +3,7 @@
 Turn off writer's block by taking inspiration from original, unreleased songs in the style of any artist.
 
 # TODO
+- filter songs that aren't songs (tracklists, interviews)
 - advanced options
     - clean
         - only include clean versions of songs?
