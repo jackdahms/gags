@@ -3,9 +3,11 @@
 Turn off writer's block by taking inspiration from original, unreleased songs in the style of any artist.
 
 # TODO
-- store n-gram chain in database
-- n-grams
 - advanced options
+    - clean
+        - only include clean versions of songs?
+        - skip curse words?
+        - substitutes for curse words?
     - force search for new songs
     - line ending method
         - mean centered normal
@@ -28,6 +30,7 @@ Turn off writer's block by taking inspiration from original, unreleased songs in
 
 ## Low priority:
 - "songs" with track lists are an issue
+- store n-gram chains in database
 - https://stackoverflow.com/questions/118241/calculate-text-width-with-javascript
 - mongo automatically delete jobs
 - add api exception for status()
