@@ -30,6 +30,7 @@ Turn off writer's block by taking inspiration from original, unreleased songs in
     - raw_text: as scraped from HTML
 
 ## Low priority:
+- link to source
 - "songs" with track lists are an issue
 - store n-gram chains in database
 - https://stackoverflow.com/questions/118241/calculate-text-width-with-javascript
