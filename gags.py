@@ -32,11 +32,8 @@ class Song():
         self.id = song_id
         self.url = url
 
-
     def __len__(self):
-        '''
-        Returns number of lines in song.
-        '''
+        '''Returns number of lines in song.'''
         return len(self.text.split('\n'))
 
     def to_dict(self):
@@ -55,7 +52,6 @@ class Song():
 
     def set_text(self, raw_text):
         self.raw_text = raw_text
-
         # get rid of section labels
         text = re.sub(r'\[.+\]', '', self.raw_text)
         # get rid of some of the empty lines and leading/trailing whitespace
@@ -143,17 +139,13 @@ def generate_song(chain, line_count=21):
     return song
 
 def get_job(job_id):
-    '''
-    Returns serializable job document.
-    '''
+    '''Returns serializable job document.'''
     job = DB.jobs.find_one({'_id': ObjectId(job_id)})
     job['_id'] = str(job['_id'])
     return job
 
 def load_songs(artist_id, job_id=None, token=TOKEN):
-    '''
-    Returns list of Song objects with id, title, and url.
-    '''   
+    '''Returns list of Song objects with id, title, and url.'''   
     songs = []
     # Load existing song names
     artist = DB.artists.find_one({'_id': artist_id})
