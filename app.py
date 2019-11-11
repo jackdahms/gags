@@ -1,6 +1,5 @@
 import time
 from json import dumps
-from random import normalvariate
 
 from flask import Flask
 from flask import jsonify, redirect, render_template, request, url_for
