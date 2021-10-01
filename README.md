@@ -2,6 +2,13 @@
 #### Good At Generating Songs
 Turn off writer's block by taking inspiration from original, unreleased songs in the style of any artist.
 
+Uses Markov chains to generate lyrics based on any artist's existing work.
+
+#### Instructions to run locally
+0. Put your Genius API token in a top-level file name `token`
+1. Run `mongod` to start MongoDB
+1. Run `python3 app.py` to start the Flask server
+
 # TODO
 - filter songs that aren't songs (tracklists, interviews)
 - advanced options
